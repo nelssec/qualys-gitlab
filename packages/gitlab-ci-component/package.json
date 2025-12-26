@@ -1,0 +1,28 @@
+{
+  "name": "@qualys/gitlab-ci-component",
+  "version": "1.0.0",
+  "description": "Qualys Container Security GitLab CI Component",
+  "main": "dist/index.js",
+  "bin": {
+    "qualys-scan": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@qualys/gitlab-core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist",
+    "template.yml"
+  ]
+}

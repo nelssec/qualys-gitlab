@@ -1,0 +1,60 @@
+spec:
+  inputs:
+    pod:
+      description: "Qualys Platform POD (US1, US2, US3, US4, EU1, EU2, CA1, IN1, AU1, UK1, AE1, KSA1)"
+      default: "US3"
+    image:
+      description: "Container image to scan (defaults to CI registry image)"
+      default: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+    scan_types:
+      description: "Comma-separated scan types: pkg, secret, malware, fileinsight, compliance"
+      default: "pkg"
+    mode:
+      description: "Scan mode: get-report, evaluate-policy, scan-only, inventory-only"
+      default: "get-report"
+    policy_tags:
+      description: "Comma-separated Qualys policy tags for evaluate-policy mode"
+      default: ""
+    fail_on_severity:
+      description: "Fail pipeline on severity threshold: 5=critical, 4=high, 3=medium, 2=low, 0=never"
+      default: "4"
+    scan_timeout:
+      description: "Scan timeout in seconds"
+      default: "300"
+    stage:
+      description: "Pipeline stage for the scan job"
+      default: "test"
+    allow_failure:
+      description: "Allow pipeline to continue on scan failure"
+      default: "false"
+
+---
+qualys-container-scan:
+  stage: $[[ inputs.stage ]]
+  image: qualys/gitlab-scanner:latest
+  variables:
+    QUALYS_POD: $[[ inputs.pod ]]
+    IMAGE_NAME: $[[ inputs.image ]]
+    SCAN_TYPES: $[[ inputs.scan_types ]]
+    SCAN_MODE: $[[ inputs.mode ]]
+    POLICY_TAGS: $[[ inputs.policy_tags ]]
+    FAIL_ON_SEVERITY: $[[ inputs.fail_on_severity ]]
+    SCAN_TIMEOUT: $[[ inputs.scan_timeout ]]
+  script:
+    - node /app/dist/index.js
+  artifacts:
+    reports:
+      container_scanning: gl-container-scanning-report.json
+      secret_detection: gl-secret-detection-report.json
+    paths:
+      - qualys-scan-results/
+    when: always
+    expire_in: 1 week
+  allow_failure: $[[ inputs.allow_failure ]]
+  rules:
+    - if: $CI_COMMIT_BRANCH
+      exists:
+        - Dockerfile
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - when: manual
+      allow_failure: true
