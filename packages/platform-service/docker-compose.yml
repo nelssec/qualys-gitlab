@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  platform-service:
+    build:
+      context: ../..
+      dockerfile: packages/platform-service/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - QUALYS_ACCESS_TOKEN=${QUALYS_ACCESS_TOKEN}
+      - QUALYS_POD=${QUALYS_POD:-US3}
+      - GITLAB_APP_ID=${GITLAB_APP_ID}
+      - GITLAB_APP_SECRET=${GITLAB_APP_SECRET}
+      - BASE_URL=${BASE_URL:-http://localhost:3000}
+      - SCAN_TYPES=${SCAN_TYPES:-pkg}
+      - SCAN_TIMEOUT=${SCAN_TIMEOUT:-300}
+      - FAIL_ON_SEVERITY=${FAIL_ON_SEVERITY:-4}
+      - SYNC_INTERVAL_MINUTES=${SYNC_INTERVAL_MINUTES:-60}
+    volumes:
+      - platform-data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  platform-data:

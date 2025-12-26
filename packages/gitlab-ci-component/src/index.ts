@@ -35,7 +35,6 @@ async function main(): Promise<void> {
   console.log('========================================');
 
   try {
-    // Get configuration from environment variables
     const pod = getEnvOrDefault('QUALYS_POD', 'US3');
     const imageId = getEnvOrFail('IMAGE_NAME');
     const scanTypesInput = getEnvOrDefault('SCAN_TYPES', 'pkg');
@@ -44,7 +43,6 @@ async function main(): Promise<void> {
     const failOnSeverity = parseInt(getEnvOrDefault('FAIL_ON_SEVERITY', '4'), 10);
     const scanTimeout = parseInt(getEnvOrDefault('SCAN_TIMEOUT', '300'), 10);
 
-    // Authentication via access token
     const accessToken = process.env.QUALYS_ACCESS_TOKEN;
     if (!accessToken) {
       throw new Error('Authentication required: Set QUALYS_ACCESS_TOKEN environment variable');
@@ -69,7 +67,6 @@ async function main(): Promise<void> {
     console.log('Setting up QScanner CLI...');
     await runner.setup();
 
-    // Configure output directory
     const outputDir = path.join(process.cwd(), 'qualys-scan-results');
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
@@ -83,7 +80,7 @@ async function main(): Promise<void> {
       mode: scanMode,
       scanTypes,
       format: ['json', 'spdx'],
-      reportFormat: ['gitlab', 'sarif'], // GitLab native format + SARIF for detailed analysis
+      reportFormat: ['gitlab', 'sarif'],
       outputDir,
       timeout: scanTimeout,
       logLevel: 'info',
@@ -93,7 +90,6 @@ async function main(): Promise<void> {
       scanOptions.policyTags = policyTags;
     }
 
-    // Execute scan
     console.log('');
     console.log('Starting container image scan...');
     console.log('----------------------------------------');
@@ -103,16 +99,12 @@ async function main(): Promise<void> {
     console.log('----------------------------------------');
     console.log('');
 
-    // Process results
     const scanResult = evaluateResults(runner, result, scanMode, failOnSeverity);
 
-    // Copy GitLab reports to expected locations
     copyGitLabReports(result, outputDir);
 
-    // Print summary
     printSummary(scanResult, scanMode);
 
-    // Set exit code
     if (!scanResult.passed) {
       console.log('');
       console.log('SCAN FAILED');
@@ -152,7 +144,6 @@ function evaluateResults(
     informational: 0,
   };
 
-  // Parse vulnerability summary from GitLab report or SARIF
   if (result.gitlabVulnReportFile && fs.existsSync(result.gitlabVulnReportFile)) {
     const parsed = runner.parseGitLabReport(result.gitlabVulnReportFile);
     summary = parsed.summary;
@@ -164,7 +155,6 @@ function evaluateResults(
   let passed = true;
 
   if (scanMode === 'evaluate-policy') {
-    // Use QScanner's policy evaluation result
     passed = result.policyResult === 'ALLOW';
     if (result.policyResult === 'DENY') {
       failureReasons.push('Qualys policy evaluation returned DENY');
@@ -173,7 +163,6 @@ function evaluateResults(
       console.log('Warning: No Qualys policies matched for evaluation (AUDIT)');
     }
   } else {
-    // Use local threshold evaluation
     if (failOnSeverity > 0) {
       if (failOnSeverity <= 5 && summary.critical > 0) {
         failureReasons.push(`Found ${summary.critical} critical vulnerabilities`);
@@ -191,7 +180,6 @@ function evaluateResults(
     }
   }
 
-  // Check for scan execution errors
   if (
     result.exitCode !== QScannerExitCode.SUCCESS &&
     result.exitCode !== QScannerExitCode.POLICY_EVALUATION_DENY &&
@@ -217,14 +205,12 @@ function copyGitLabReports(
   },
   _outputDir: string
 ): void {
-  // Copy GitLab vulnerability report to expected location
   if (result.gitlabVulnReportFile && fs.existsSync(result.gitlabVulnReportFile)) {
     const destPath = path.join(process.cwd(), 'gl-container-scanning-report.json');
     fs.copyFileSync(result.gitlabVulnReportFile, destPath);
     console.log(`GitLab vulnerability report: ${destPath}`);
   }
 
-  // Copy GitLab secret detection report to expected location
   if (result.gitlabSecretReportFile && fs.existsSync(result.gitlabSecretReportFile)) {
     const destPath = path.join(process.cwd(), 'gl-secret-detection-report.json');
     fs.copyFileSync(result.gitlabSecretReportFile, destPath);

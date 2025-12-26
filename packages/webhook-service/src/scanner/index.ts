@@ -1,0 +1,1 @@
+export { ScannerService } from './service';

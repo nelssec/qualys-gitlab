@@ -76,10 +76,26 @@ qualys-gitlab/
 │   │       │   └── QScannerRunner.ts
 │   │       ├── types.ts
 │   │       └── index.ts
-│   └── gitlab-ci-component/     # GitLab CI Component
+│   ├── gitlab-ci-component/     # GitLab CI Component (Phase 1)
+│   │   ├── src/
+│   │   │   └── index.ts
+│   │   ├── template.yml
+│   │   └── Dockerfile
+│   ├── webhook-service/         # Webhook Service (Phase 2)
+│   │   ├── src/
+│   │   │   ├── handlers/
+│   │   │   ├── gitlab/
+│   │   │   └── scanner/
+│   │   ├── k8s/
+│   │   └── Dockerfile
+│   └── platform-service/        # Platform Service (Phase 3)
 │       ├── src/
-│       │   └── index.ts
-│       ├── template.yml
+│       │   ├── oauth/           # GitLab OAuth flow
+│       │   ├── discovery/       # Auto-discover repos
+│       │   ├── webhooks/        # Auto-register webhooks
+│       │   ├── sync/            # Periodic sync
+│       │   ├── handlers/
+│       │   └── db/
 │       └── Dockerfile
 ├── package.json
 └── tsconfig.json
@@ -128,7 +144,9 @@ docker build -t qualys/gitlab-scanner:latest -f packages/gitlab-ci-component/Doc
 
 - [Architecture Overview](docs/architecture.md) - System design with diagrams
 - [Deployment Guide](docs/deployment.md) - Build, publish, and deploy
-- [Technical Architecture](docs/blog-technical-architecture.md) - Detailed technical walkthrough
+- [Technical Architecture](docs/blog-technical-architecture.md) - Technical walkthrough
+- [Webhook Service](docs/webhook-service.md) - MR scanning with webhooks (Phase 2)
+- [Platform Service](docs/platform-service.md) - Zero-config OAuth integration (Phase 3)
 
 ## License
 

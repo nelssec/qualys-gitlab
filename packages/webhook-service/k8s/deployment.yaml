@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qualys-gitlab-webhook
+  labels:
+    app: qualys-gitlab-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qualys-gitlab-webhook
+  template:
+    metadata:
+      labels:
+        app: qualys-gitlab-webhook
+    spec:
+      containers:
+        - name: webhook-service
+          image: qualys/gitlab-webhook-service:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: QUALYS_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: qualys-gitlab-secrets
+                  key: qualys-access-token
+            - name: QUALYS_POD
+              valueFrom:
+                configMapKeyRef:
+                  name: qualys-gitlab-config
+                  key: qualys-pod
+            - name: GITLAB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: qualys-gitlab-config
+                  key: gitlab-url
+            - name: GITLAB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: qualys-gitlab-secrets
+                  key: gitlab-token
+            - name: WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: qualys-gitlab-secrets
+                  key: webhook-secret
+                  optional: true
+            - name: SCAN_TYPES
+              valueFrom:
+                configMapKeyRef:
+                  name: qualys-gitlab-config
+                  key: scan-types
+                  optional: true
+            - name: FAIL_ON_SEVERITY
+              valueFrom:
+                configMapKeyRef:
+                  name: qualys-gitlab-config
+                  key: fail-on-severity
+                  optional: true
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qualys-gitlab-webhook
+spec:
+  selector:
+    app: qualys-gitlab-webhook
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qualys-gitlab-config
+data:
+  qualys-pod: "US3"
+  gitlab-url: "https://gitlab.com"
+  scan-types: "pkg"
+  fail-on-severity: "4"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: qualys-gitlab-secrets
+type: Opaque
+stringData:
+  qualys-access-token: ""  # Set via kubectl or external secrets
+  gitlab-token: ""         # Set via kubectl or external secrets
+  webhook-secret: ""       # Optional

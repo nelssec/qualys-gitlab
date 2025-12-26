@@ -1,0 +1,30 @@
+{
+  "name": "@qualys/gitlab-platform-service",
+  "version": "1.0.0",
+  "description": "Qualys GitLab platform service with OAuth and auto-discovery",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "migrate": "node dist/db/migrate.js"
+  },
+  "dependencies": {
+    "@qualys/gitlab-core": "^1.0.0",
+    "fastify": "^4.25.0",
+    "@fastify/cors": "^8.5.0",
+    "@fastify/cookie": "^9.2.0",
+    "@fastify/formbody": "^7.4.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/node-cron": "^3.0.11",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

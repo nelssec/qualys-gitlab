@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  webhook-service:
+    build:
+      context: ../..
+      dockerfile: packages/webhook-service/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - QUALYS_ACCESS_TOKEN=${QUALYS_ACCESS_TOKEN}
+      - QUALYS_POD=${QUALYS_POD:-US3}
+      - GITLAB_URL=${GITLAB_URL}
+      - GITLAB_TOKEN=${GITLAB_TOKEN}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-}
+      - SCAN_TYPES=${SCAN_TYPES:-pkg}
+      - SCAN_TIMEOUT=${SCAN_TIMEOUT:-300}
+      - FAIL_ON_SEVERITY=${FAIL_ON_SEVERITY:-4}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s

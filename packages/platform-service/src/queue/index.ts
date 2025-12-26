@@ -1,0 +1,1 @@
+export { ScanWorker } from './worker';

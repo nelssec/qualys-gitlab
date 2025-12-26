@@ -32,7 +32,6 @@ export class QScannerRunner {
       fs.mkdirSync(this.workDir, { recursive: true });
     }
 
-    // Validate pod
     const podUpper = config.pod.toUpperCase();
     if (!VALID_PODS.includes(podUpper as typeof VALID_PODS[number])) {
       throw new Error(`Invalid pod: ${config.pod}. Valid pods: ${VALID_PODS.join(', ')}`);

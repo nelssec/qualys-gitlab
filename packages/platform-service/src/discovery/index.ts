@@ -1,0 +1,1 @@
+export { DiscoveryService } from './service';
