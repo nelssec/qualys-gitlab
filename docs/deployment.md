@@ -1,7 +1,5 @@
 # Deployment Guide
 
-This guide explains how to build, publish, and deploy the Qualys GitLab integration.
-
 ## Prerequisites
 
 - Node.js 20+
@@ -14,33 +12,35 @@ This guide explains how to build, publish, and deploy the Qualys GitLab integrat
 
 ```mermaid
 flowchart LR
-    subgraph Local["Local Development"]
+    subgraph local["Local Development"]
         src["Source Code"]
         install["npm install"]
         build["npm run build"]
-        test["npm test"]
     end
 
-    subgraph Artifacts["Build Artifacts"]
+    subgraph artifacts["Build Artifacts"]
         core_dist["core/dist/"]
         cli_dist["gitlab-ci-component/dist/"]
         image["Docker Image"]
     end
 
-    src --> install --> build --> test
+    src --> install --> build
     build --> core_dist
     build --> cli_dist
     cli_dist --> image
+
+    style local fill:#e8f5e9
+    style artifacts fill:#fff3e0
 ```
 
-### Step 1: Install Dependencies
+### Install Dependencies
 
 ```bash
 cd qualys-gitlab
 npm install
 ```
 
-### Step 2: Build Packages
+### Build Packages
 
 ```bash
 npm run build
@@ -50,7 +50,7 @@ This builds both packages:
 - `@qualys/gitlab-core` - Shared library
 - `@qualys/gitlab-ci-component` - Scanner CLI
 
-### Step 3: Build Docker Image
+### Build Docker Image
 
 ```bash
 docker build -t qualys/gitlab-scanner:latest \
@@ -62,13 +62,10 @@ docker build -t qualys/gitlab-scanner:latest \
 ### Docker Hub
 
 ```bash
-# Login to Docker Hub
 docker login
 
-# Tag for release
 docker tag qualys/gitlab-scanner:latest qualys/gitlab-scanner:1.0.0
 
-# Push images
 docker push qualys/gitlab-scanner:latest
 docker push qualys/gitlab-scanner:1.0.0
 ```
@@ -82,7 +79,6 @@ To publish as an official GitLab CI Component:
 3. Tag a release
 
 ```bash
-# In the component repository
 git tag 1.0.0
 git push origin 1.0.0
 ```
@@ -91,28 +87,32 @@ git push origin 1.0.0
 
 ```mermaid
 flowchart TB
-    subgraph Build["Build Environment"]
+    subgraph build["Build Environment"]
         dev["Developer Machine"]
         ci_build["CI/CD Build"]
     end
 
-    subgraph Registry["Registries"]
+    subgraph registry["Registries"]
         dockerhub["Docker Hub<br/>qualys/gitlab-scanner"]
         gitlab_comp["GitLab Component<br/>gitlab.com/qualys/qualys-container-scan"]
     end
 
-    subgraph Runtime["Runtime Environment"]
+    subgraph runtime["Runtime Environment"]
         runner["GitLab Runner"]
         container["Scanner Container"]
     end
 
-    dev -->|"docker build & push"| dockerhub
-    ci_build -->|"automated release"| dockerhub
-    ci_build -->|"git tag"| gitlab_comp
+    dev -->|docker build & push| dockerhub
+    ci_build -->|automated release| dockerhub
+    ci_build -->|git tag| gitlab_comp
 
-    gitlab_comp -->|"references"| dockerhub
-    runner -->|"pulls"| dockerhub
-    runner -->|"runs"| container
+    gitlab_comp -->|references| dockerhub
+    runner -->|pulls| dockerhub
+    runner -->|runs| container
+
+    style build fill:#e8f5e9
+    style registry fill:#fff3e0
+    style runtime fill:#e1f5fe
 ```
 
 ## User Integration
@@ -131,7 +131,7 @@ include:
 
 ### Method 2: Direct Docker Image
 
-Users can also reference the Docker image directly:
+Users can reference the Docker image directly:
 
 ```yaml
 qualys-scan:
@@ -149,21 +149,19 @@ qualys-scan:
 
 ## CI/CD Variables Setup
 
-Users must configure these variables in GitLab:
-
 ```mermaid
 flowchart LR
-    subgraph GitLab["GitLab Project Settings"]
+    subgraph gitlab["GitLab Project Settings"]
         settings["Settings"]
         cicd["CI/CD"]
         variables["Variables"]
     end
 
-    subgraph Required["Required Variables"]
+    subgraph required["Required Variables"]
         token["QUALYS_ACCESS_TOKEN<br/>(masked, protected)"]
     end
 
-    subgraph Optional["Optional Variables"]
+    subgraph optional["Optional Variables"]
         pod["QUALYS_POD"]
         skip_tls["QUALYS_SKIP_TLS_VERIFY"]
         proxy["QUALYS_PROXY"]
@@ -174,6 +172,10 @@ flowchart LR
     variables --> pod
     variables --> skip_tls
     variables --> proxy
+
+    style gitlab fill:#e1f5fe
+    style required fill:#ffebee
+    style optional fill:#e8f5e9
 ```
 
 ### Setting Variables via UI
@@ -181,7 +183,7 @@ flowchart LR
 1. Navigate to **Settings > CI/CD > Variables**
 2. Add `QUALYS_ACCESS_TOKEN`:
    - Type: Variable
-   - Flags: Masked, Protected (recommended)
+   - Flags: Masked, Protected
    - Value: Your Qualys API token
 
 ### Setting Variables via API
@@ -196,7 +198,7 @@ curl --request POST \
   "https://gitlab.com/api/v4/projects/<project-id>/variables"
 ```
 
-## Automated Release Pipeline
+## Release Pipeline
 
 Example `.gitlab-ci.yml` for the component repository:
 
@@ -253,22 +255,13 @@ publish:
 
 ## Troubleshooting
 
-### Common Issues
-
-```mermaid
-flowchart TD
-    issue["Issue"]
-
-    issue --> auth["Authentication Failed"]
-    issue --> platform["Platform Not Supported"]
-    issue --> timeout["Scan Timeout"]
-    issue --> report["No Report Generated"]
-
-    auth --> auth_fix["Check QUALYS_ACCESS_TOKEN<br/>Verify POD setting"]
-    platform --> platform_fix["Ensure linux-amd64 runner<br/>Use Docker executor"]
-    timeout --> timeout_fix["Increase SCAN_TIMEOUT<br/>Check network connectivity"]
-    report --> report_fix["Check scan logs<br/>Verify image exists"]
-```
+| Issue | Resolution |
+|-------|------------|
+| Function not triggering | Verify pipeline includes the component correctly |
+| Authentication failed | Check QUALYS_ACCESS_TOKEN is set and valid |
+| Platform not supported | Ensure linux-amd64 runner, use Docker executor |
+| Scan timeout | Increase SCAN_TIMEOUT variable |
+| No report generated | Check scan logs, verify image exists |
 
 ### Debug Mode
 

@@ -126,9 +126,9 @@ docker build -t qualys/gitlab-scanner:latest -f packages/gitlab-ci-component/Doc
 
 ## Documentation
 
-- [Architecture Overview](docs/architecture.md) - System design with Mermaid diagrams
-- [Deployment Guide](docs/deployment.md) - How to build, publish, and deploy
-- [How It Works](docs/blog-how-it-works.md) - Deep dive blog post
+- [Architecture Overview](docs/architecture.md) - System design with diagrams
+- [Deployment Guide](docs/deployment.md) - Build, publish, and deploy
+- [Technical Architecture](docs/blog-technical-architecture.md) - Detailed technical walkthrough
 
 ## License
 
