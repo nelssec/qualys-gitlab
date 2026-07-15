@@ -1,5 +1,7 @@
 # qualys-gitlab
 
+> ⚠️ **Unofficial project.** This is a personal project and is not affiliated with, endorsed by, or supported by Qualys, Inc.
+
 Qualys Container Security integration for GitLab CI/CD.
 
 ## Features
@@ -150,4 +152,4 @@ docker build -t qualys/gitlab-scanner:latest -f packages/gitlab-ci-component/Doc
 
 ## License
 
-Proprietary - Qualys, Inc.
+MIT — see [LICENSE](LICENSE). This is a personal project, not a Qualys, Inc. product.
